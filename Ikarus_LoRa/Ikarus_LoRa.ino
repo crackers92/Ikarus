@@ -46,10 +46,12 @@ const unsigned long xbee_serial_delay = 500;
 const int PIN_LIGHTSENSOR = A5;  // Grove - Temperature Sensor connect to A5
 const int LIGHT_THRESHOLD_VALUE = 10;    //The threshold for which the LED should turn on. 
 const int LED_PCB_PIN=9;         //Connect the PCB LED L0 to Pin13, Digital 13
-const int LED_EXT_PIN=8;        //Connect the external Green LED to Pin 12, Digital 12
+const int LED_EXT_PIN=8;        //Connct the external Green LED to Pin 12, Digital 12
+const int BUTTON_PCB_PIN=8;        //Button ON -OFF LoRa
 
 // **************** global vars *************************
 byte by_CdeLed = 0; //Command received from the LoRa Module to switch the LED state (0x01: ON | 0x00: OFF | 0x02: Blink)
+int buttonStatus = 0; // Etat du Button ON = 1  - OFF = 0
 
 // **************** initialisation *****************************
 void setup()
@@ -62,6 +64,7 @@ void setup()
   delay(1000);
   
   // *********** init digital pins **********************************************
+  pinMode(BUTTON_PCB_PIN, OUTPUT);    //Boutton On OFF
   pinMode(LED_PCB_PIN, OUTPUT);     //Set the LED on Digital 12 as an OUTPUT
   digitalWrite(LED_PCB_PIN, LOW);  //init
   pinMode(LED_EXT_PIN, OUTPUT);     //Set the External Led on Digital 13 as an OUTPUT
@@ -85,8 +88,21 @@ void loop()
 {
   /****************Up Link data ****************************************/
   
+  // Tesdt Buttun
+  buttonStatus = digitalRead (BUTTON_PCB_PIN); 
+  if (buttonStatus == HIGH)
+  {
+     digitalWrite(LED_EXT_PIN, HIGH);
+     Serial.println ("Button ON");
+  }
+  else
+  {
+    digitalWrite(LED_EXT_PIN, LOW);
+    Serial.println ("Button OFF");
+  }
+  
   //switch the Ext LED on
-  digitalWrite(LED_EXT_PIN, HIGH);
+  //digitalWrite(LED_EXT_PIN, HIGH);
   
   /****** light sensor measures **************************************/
   int sensorValue = analogRead(PIN_LIGHTSENSOR); //read light from sensor
@@ -99,8 +115,8 @@ void loop()
   /***************print light ***************/
   printLightSensorValue(sensorValue, Rsensor);
   
-  //switch the Ext LED on
-  digitalWrite(LED_EXT_PIN, LOW);
+ //switch the Ext LED on
+ //  digitalWrite(LED_EXT_PIN, LOW);
   
   /********* Down Link get serial data  *****************************/
   unsigned long l_milli = millis(); //save current time for timeout
@@ -115,7 +131,7 @@ void loop()
     SerialDebug.println(by_CdeLed);
     
     while(SerialXBee.read() > -1); //empty XBee buffer
-    
+/*    
     switch (by_CdeLed) {
       case 0: 
       digitalWrite(LED_PCB_PIN, LOW);
@@ -126,8 +142,11 @@ void loop()
       case 2: 
       led_blinking(30);  // both leds blink for 30 sec
       break;
+  
     }
+    */
   }
+  
   
   delay(ul_delay_loop); //get and send datas every 180 sec (default).
   
